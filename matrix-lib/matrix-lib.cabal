@@ -7,9 +7,13 @@ bug-reports:        https://github.com/ALanovaya/datalog-translator/issues
 author:             ALanovaya
 maintainer:         lanovaya.al6@gmail.com
 license:            MIT
-license-file:       LICENSE
+license-file:       ../LICENSE
 build-type:         Simple
 extra-source-files: CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/ALanovaya/datalog-translator/matrix-lib
 
 library
   exposed-modules:
@@ -23,7 +27,7 @@ library
       base >=4.7 && <5
     , deepseq
     , template-haskell
-  default-language: GHC2021
+  default-language: Haskell2010
 
 executable matrix-lib-exe
   main-is: Main.hs
@@ -37,4 +41,4 @@ executable matrix-lib-exe
     , deepseq
     , matrix-lib
     , template-haskell
-  default-language: GHC2021
+  default-language: Haskell2010
