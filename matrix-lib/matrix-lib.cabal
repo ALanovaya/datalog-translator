@@ -27,6 +27,7 @@ library
       base >=4.7 && <5
     , deepseq
     , template-haskell
+    , split
   default-language: Haskell2010
 
 executable matrix-lib-exe
@@ -41,4 +42,5 @@ executable matrix-lib-exe
     , deepseq
     , matrix-lib
     , template-haskell
+    , split
   default-language: Haskell2010
