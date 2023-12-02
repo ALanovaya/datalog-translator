@@ -51,10 +51,12 @@ slice starts stops (Matrix dims ms)
 slice _ _ leaf@(Leaf _) = leaf
 
 increaseDimensions :: Int -> Matrix a -> Matrix a
-increaseDimensions n mat@(Matrix dims _) =
-  Matrix (replicate n 1 ++ dims) (replicate n mat)
-increaseDimensions _ (Leaf _) =
-  error "Cannot increase dimensions on a leaf node"
+increaseDimensions n mat@(Matrix dims _)
+  | n <= 0    = mat
+  | otherwise = Matrix (replicate n 1 ++ dims) [mat] 
+increaseDimensions n (Leaf a)
+  | n <= 0    = Leaf a
+  | otherwise = Matrix (replicate n 1) [Leaf a]
 
 shape :: Matrix a -> [Int]
 shape (Leaf _) = []
@@ -72,7 +74,7 @@ set (Matrix dims ms) (i:is) val =
 set _ _ _ = error "Invalid index"
 
 createZeroMatrix :: Num a => [Int] -> Matrix a
-createZeroMatrix dims = reshape dims (repeat 0)
+createZeroMatrix dims = generateMatrix 0 dims
 
 removeIdx :: Int -> [a] -> [a]
 removeIdx idx xs = take (idx - 1) xs ++ drop idx xs

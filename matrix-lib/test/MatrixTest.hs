@@ -37,7 +37,7 @@ testSlice =
 testIncreaseDimensions =
   TestCase $ do
     let matrix = Matrix [2] [Leaf 1, Leaf 2]
-    let expected = Matrix [1, 1, 2] [Matrix [1, 2] [Leaf 1, Leaf 2]]
+    let expected = Matrix [1, 1, 2] [Matrix [2] [Leaf 1, Leaf 2]]
     assertEqual
       "increaseDimensions 2 matrix"
       expected
