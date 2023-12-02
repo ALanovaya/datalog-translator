@@ -24,7 +24,7 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      base >=4.17 && <5
     , deepseq
     , template-haskell
     , split
@@ -38,9 +38,16 @@ executable matrix-lib-exe
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      base >=4.17 && <5
     , deepseq
     , matrix-lib
     , template-haskell
     , split
+  default-language: Haskell2010
+
+test-suite matrix-lib-test
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: MatrixTest.hs
+  build-depends: base ^>=4.17 && <5, HUnit ^>=1.6, matrix-lib
   default-language: Haskell2010
