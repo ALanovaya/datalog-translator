@@ -52,10 +52,10 @@ slice _ _ leaf@(Leaf _) = leaf
 
 increaseDimensions :: Int -> Matrix a -> Matrix a
 increaseDimensions n mat@(Matrix dims _)
-  | n <= 0    = mat
-  | otherwise = Matrix (replicate n 1 ++ dims) [mat] 
+  | n <= 0 = mat
+  | otherwise = Matrix (replicate n 1 ++ dims) [mat]
 increaseDimensions n (Leaf a)
-  | n <= 0    = Leaf a
+  | n <= 0 = Leaf a
   | otherwise = Matrix (replicate n 1) [Leaf a]
 
 shape :: Matrix a -> [Int]
