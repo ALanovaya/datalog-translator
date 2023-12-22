@@ -20,6 +20,13 @@ generateMatrix val [n] = Matrix [n] $ replicate n (Leaf val)
 generateMatrix val (n:ns) =
   Matrix (n : ns) $ replicate n (generateMatrix val ns)
 
+addMatrices :: (Num a) => Matrix a -> Matrix a -> Matrix a
+addMatrices (Leaf a) (Leaf b) = Leaf (a + b)
+addMatrices (Matrix dimsA subMatricesA) (Matrix dimsB subMatricesB)
+  | dimsA == dimsB = Matrix dimsA (zipWith addMatrices subMatricesA subMatricesB)
+  | otherwise = error "Matrices must have the same dimensions"
+addMatrices _ _ = error "Incompatible matrix shapes for addition"
+
 flatten :: Matrix a -> [a]
 flatten (Leaf a) = [a]
 flatten (Matrix _ ms) = concatMap flatten ms

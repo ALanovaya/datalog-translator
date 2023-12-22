@@ -19,7 +19,7 @@ executable translator
     main-is:          
         Main.hs
     build-depends:    
-        base ^>=4.14, matrix-lib
+        base >=4.14 && <5, matrix-lib
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
     hs-source-dirs:   
         app

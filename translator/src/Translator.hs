@@ -1,6 +1,6 @@
 module Translator where
 
-import DatalogAST hiding (head)
+import DatalogAST
 import Matrix
 import qualified Data.Map.Strict as Map
 import Data.List (foldl', transpose, foldl1', elemIndices)
@@ -25,10 +25,9 @@ initializeMatrixForPredicate domainMap (Atom predicateName _) =
   let dimensions = Map.findWithDefault [] predicateName domainMap
   in createZeroMatrix dimensions
 
-translateRule :: DatalogProgram -> Rule -> Matrix Int
-translateRule program (Rule headAtom bodyAtoms) =
-  let domainMap = buildDomainMap program
-      termsList = map terms bodyAtoms -- Extract terms from each bodyAtom
+translateRule :: Map.Map String [Int] -> Rule -> Matrix Int
+translateRule domainMap (Rule headAtom bodyAtoms) =
+  let termsList = map terms bodyAtoms -- Extract terms from each bodyAtom
       bodyMatrices = map (initializeMatrixForPredicate domainMap) bodyAtoms
       matricesWithTerms = zip bodyMatrices termsList -- Pair each matrix with its terms
       multipliedMatrix = foldl1' (\acc (matrix, bodyTerms) -> 
@@ -41,8 +40,8 @@ translateRule program (Rule headAtom bodyAtoms) =
 findRepeatingTermIndices :: [Term] -> [Term] -> (Int, Int)
 findRepeatingTermIndices listA listB =
   let duplicates = filter (`elem` listB) listA
-      indexA = head $ elemIndices (head duplicates) listA
-      indexB = head $ elemIndices (head duplicates) listB
+      indexA = Prelude.head $ elemIndices (Prelude.head duplicates) listA
+      indexB = Prelude.head $ elemIndices (Prelude.head duplicates) listB
   in (indexA, indexB)
 
 adjustDimensions :: Matrix Int -> Matrix Int -> ([Int], Matrix Int)
@@ -50,7 +49,7 @@ adjustDimensions largerMatrix smallerMatrix =
   let largerDimensions = shape largerMatrix
       smallerDimensions = shape smallerMatrix
       updatedSmallerDims = if length largerDimensions /= length smallerDimensions
-                           then take (length largerDimensions) $ smallerDimensions ++ repeat (head largerDimensions)
+                           then take (length largerDimensions) $ smallerDimensions ++ repeat (Prelude.head largerDimensions)
                            else smallerDimensions
       flattenedSmallerMatrix = flatten smallerMatrix
       reshapedSmallerMatrix = reshape updatedSmallerDims flattenedSmallerMatrix
@@ -83,11 +82,20 @@ adjustFinalMatrix headMatrixDimensions matrix =
 
 -- The main translation function that translates a DatalogProgram to a list of matrices
 translateDatalogProgram :: DatalogProgram -> [Matrix Int]
-translateDatalogProgram (DatalogProgram clauses) = map translateClause clauses
-  where
-    -- Assuming we have a domain map built for the entire DatalogProgram
+translateDatalogProgram (DatalogProgram clauses) =
+  let
     domainMap = buildDomainMap (DatalogProgram clauses)
-
-    translateClause :: Clause -> Matrix Int
-    translateClause (ClauseFact fact) = initializeMatrixForPredicate domainMap fact
-    translateClause (ClauseRule rule) = translateRule (DatalogProgram clauses) rule
+    processClause acc (ClauseFact _) =
+      acc
+    processClause acc (ClauseRule rule) =
+      let headPred = predicate (DatalogAST.head rule)
+          matrix = translateRule domainMap rule
+          updatedMatrix = Map.insertWith addAdjustedMatrices headPred matrix acc
+      in updatedMatrix
+    addAdjustedMatrices newMatrix oldMatrix =
+      let adjustedMatrix = adjustFinalMatrix (shape oldMatrix) newMatrix
+          adjustedMatrixOld = adjustFinalMatrix (shape newMatrix) oldMatrix
+      in addMatrices adjustedMatrix adjustedMatrixOld
+    initialMatrixMap = Map.empty
+    finalMatrixMap = foldl' processClause initialMatrixMap clauses
+  in Map.elems finalMatrixMap 

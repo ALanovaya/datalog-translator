@@ -10,6 +10,16 @@ testGenerateMatrix =
     let expected = Matrix [2] [Leaf 1, Leaf 1]
     assertEqual "generateMatrix 1 [2]" expected (generateMatrix 1 [2])
 
+-- Test case for 'addMatrices' with multidimensional matrices (dimension > 3)
+testAddMatricesMultiDimensional =
+  TestCase $ do
+    -- Construct two 4-dimensional matrices
+    let matrix1 = generateMatrix 1 [2, 2, 2, 2]
+    let matrix2 = generateMatrix 2 [2, 2, 2, 2]
+    -- Expected result after addition: all elements should be 1 + 2 = 3
+    let expected = generateMatrix 3 [2, 2, 2, 2]
+    assertEqual "addMatrices for 4D matrices" expected (addMatrices matrix1 matrix2)
+
 -- Test case for 'flatten'
 testFlatten =
   TestCase $ do
