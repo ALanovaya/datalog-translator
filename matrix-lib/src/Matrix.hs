@@ -51,7 +51,7 @@ slice starts stops (Matrix dims ms)
           (slice (tail starts) (tail stops))
           (take (head stops - head starts) $ drop (head starts) ms)
   where
-    newDims = zipWith flip (-) starts stops
+    newDims = zipWith (flip (-)) starts stops
 slice _ _ leaf@(Leaf _) = leaf
 
 increaseDimensions :: Int -> Matrix a -> Matrix a
@@ -78,7 +78,7 @@ set (Matrix dims ms) (i:is) val =
 set _ _ _ = error "Invalid index"
 
 createZeroMatrix :: Num a => [Int] -> Matrix a
-createZeroMatrix = generateMatrix 0
+createZeroMatrix = generateMatrix 0 
 
 removeIdx :: Int -> [a] -> [a]
 removeIdx idx xs = take (idx - 1) xs ++ drop idx xs
