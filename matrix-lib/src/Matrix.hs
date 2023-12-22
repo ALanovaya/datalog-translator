@@ -1,7 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
 
 module Matrix where
 
@@ -54,7 +51,7 @@ slice starts stops (Matrix dims ms)
           (slice (tail starts) (tail stops))
           (take (head stops - head starts) $ drop (head starts) ms)
   where
-    newDims = zipWith (\start stop -> stop - start) starts stops
+    newDims = zipWith flip (-) starts stops
 slice _ _ leaf@(Leaf _) = leaf
 
 increaseDimensions :: Int -> Matrix a -> Matrix a
@@ -81,7 +78,7 @@ set (Matrix dims ms) (i:is) val =
 set _ _ _ = error "Invalid index"
 
 createZeroMatrix :: Num a => [Int] -> Matrix a
-createZeroMatrix dims = generateMatrix 0 dims
+createZeroMatrix = generateMatrix 0
 
 removeIdx :: Int -> [a] -> [a]
 removeIdx idx xs = take (idx - 1) xs ++ drop idx xs
@@ -112,7 +109,7 @@ multidimensionalMatrixMultiply da db a b =
 
 -- Helper to generate all possible indices for a given shape
 allIndices :: [Int] -> [[Int]]
-allIndices dims = sequence (map (\x -> [0 .. x - 1]) dims)
+allIndices = mapM (\ x -> [0 .. x - 1])
 
 -- Helper to update the result matrix
 updateResult ::

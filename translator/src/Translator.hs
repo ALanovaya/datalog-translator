@@ -15,7 +15,7 @@ buildDomainMap (DatalogProgram clauses) =
       let termCounts = countUniqueTerms ts
           newDomainMap =
             Map.insertWith (zipWith max) predicateName termCounts acc
-       in Map.adjust (zipWith max (repeat 0)) predicateName newDomainMap
+       in Map.adjust (map (max 0)) predicateName newDomainMap
     updateDomainMap acc _ = acc
 
 countUniqueTerms :: [Term] -> [Int]

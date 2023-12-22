@@ -28,11 +28,11 @@ data Clause
   deriving (Show, Eq)
 
 -- Modify the DatalogProgram type to hold a list of Clauses
-data DatalogProgram =
+newtype DatalogProgram =
   DatalogProgram [Clause]
   deriving (Show, Eq)
 
 -- Define a type for a query (an atom representing the query to be evaluated)
-data Query =
+newtype Query =
   Query Atom
   deriving (Show, Eq)
