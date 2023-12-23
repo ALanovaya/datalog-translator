@@ -26,8 +26,8 @@ executable translator
     default-language: Haskell2010
 
 library
-  other-modules:
-      DatalogAST, Translator
+  exposed-modules:
+      DatalogAST
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints

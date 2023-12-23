@@ -1,0 +1,44 @@
+cabal-version:      2.4
+name:               interpreter
+version:            0.1.0.0
+description:        Please see the README on GitHub at <https://github.com/ALanovaya/datalog-translator#readme>
+homepage:           https://github.com/ALanovaya/datalog-translator#readme
+bug-reports:        https://github.com/ALanovaya/datalog-translator/issues
+author:             ALanovaya
+maintainer:         lanovaya.al6@gmail.com
+license:            MIT
+license-file:       ../LICENSE
+build-type:         Simple
+extra-source-files: CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/ALanovaya/datalog-translator/interpreter
+executable interpreter
+    main-is:          
+        Main.hs
+    build-depends:    
+        base >=4.14 && <5, matrix-lib, translator
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+    hs-source-dirs:   
+        app
+    default-language: Haskell2010
+
+library
+  exposed-modules:
+      Interpreter
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.14 && <5, translator, matrix-lib, containers >=0.5 && <0.7
+  default-language: Haskell2010
+
+test-suite interpreter-test
+  type: exitcode-stdio-1.0
+  hs-source-dirs: 
+    test
+  main-is: InterpreterTest.hs
+  build-depends: 
+    base >=4.14 && <5, HUnit ^>=1.6, interpreter, translator, containers >=0.5 && <0.7
+  default-language: Haskell2010
