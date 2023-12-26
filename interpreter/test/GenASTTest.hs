@@ -15,10 +15,10 @@ genTerm = Gen.choice [ Variable <$> Gen.string (Range.linear 1 10) Gen.alphaNum
                      ]
 
 genAtom :: Gen Atom
-genAtom = Atom <$> Gen.string (Range.linear 1 10) Gen.alphaNum <*> Gen.list (Range.linear 0 5) genTerm
+genAtom = Atom <$> Gen.string (Range.linear 1 10) Gen.alphaNum <*> Gen.list (Range.linear 1 5) genTerm
 
 genRule :: Gen Rule
-genRule = Rule <$> genAtom <*> Gen.list (Range.linear 0 5) genAtom
+genRule = Rule <$> genAtom <*> Gen.list (Range.linear 1 5) genAtom
 
 genFact :: Gen Fact
 genFact = genAtom

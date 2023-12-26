@@ -126,7 +126,12 @@ adjustFinalMatrix headMatrixDimensions matrix =
 translateDatalogProgram :: DatalogProgram -> [Matrix Int]
 translateDatalogProgram (DatalogProgram clauses) =
   let domainMap = buildDomainMap (DatalogProgram clauses)
-      processClause acc (ClauseFact _) = acc
+      processClause acc (ClauseFact fact) =
+        let factMatrix = Prelude.head (translateAtomsToMatrices [fact])
+            factPred = predicate fact
+            updatedMatrix =
+              Map.insertWith addAdjustedMatrices factPred factMatrix acc
+         in updatedMatrix
       processClause acc (ClauseRule rule) =
         let headPred = predicate (DatalogAST.head rule)
             matrix = translateRule domainMap rule
