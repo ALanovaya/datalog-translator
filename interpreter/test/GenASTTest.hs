@@ -44,7 +44,7 @@ testTranslateInterpretAST = property $ do
   program <- forAll genDatalogProgram
   let translatedResult = translateDatalogProgram program
   let interpretedResult = executeProgram program
-  let translatedInterpretedResult = translateAtomsToMatrices (interpretedResult)
+  let translatedInterpretedResult = translateAtomsToMatrices interpretedResult
   assert $ compareResults translatedInterpretedResult translatedResult
 
 main :: IO ()

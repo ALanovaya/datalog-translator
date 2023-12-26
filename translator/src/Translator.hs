@@ -23,7 +23,7 @@ translateAtomsToMatrices atoms =
   let predicateMap = createPredicateMap atoms
       predicateMap' = transformPredicateMap predicateMap
       emptyMatrices = Map.mapWithKey (\_ dims -> createZeroMatrix dims) (predicateSizesMap predicateMap')
-      filledMatrices = Map.foldlWithKey' (\acc key ts -> fillMatrix acc key ts) emptyMatrices predicateMap'
+      filledMatrices = Map.foldlWithKey' fillMatrix emptyMatrices predicateMap'
   in Map.elems filledMatrices
 
 replaceWithPositions :: [[a]] -> [[Int]]
