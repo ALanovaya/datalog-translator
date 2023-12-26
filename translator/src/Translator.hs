@@ -1,10 +1,40 @@
 module Translator where
 
-import Data.List (elemIndices, foldl', foldl1', transpose)
+import Data.List (elemIndices, foldl', foldl1', transpose, nub)
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import DatalogAST
 import Matrix
+
+transposeAndNub :: [[Term]] -> [[Term]]
+transposeAndNub = map nub . transpose
+
+transformPredicateMap :: Map.Map String [[Term]] -> Map.Map String [[Term]]
+transformPredicateMap = Map.map transposeAndNub
+
+predicateSizesMap :: Map.Map String [[Term]] -> Map.Map String [Int]
+predicateSizesMap = Map.map (map length)
+
+createPredicateMap :: [Atom] -> Map.Map String [[Term]]
+createPredicateMap atoms = Map.fromListWith (zipWith (++) . map nub) [(predicate atom, map (:[]) $ terms atom) | atom <- atoms]
+
+translateAtomsToMatrices :: [Atom] -> [Matrix Int]
+translateAtomsToMatrices atoms =
+  let predicateMap = createPredicateMap atoms
+      predicateMap' = transformPredicateMap predicateMap
+      emptyMatrices = Map.mapWithKey (\_ dims -> createZeroMatrix dims) (predicateSizesMap predicateMap')
+      filledMatrices = Map.foldlWithKey' (\acc key ts -> fillMatrix acc key ts) emptyMatrices predicateMap'
+  in Map.elems filledMatrices
+
+replaceWithPositions :: [[a]] -> [[Int]]
+replaceWithPositions = map (\xs -> enumFromTo 0 (length xs - 1))
+
+fillMatrix :: Map.Map String (Matrix Int) -> String -> [[Term]] -> Map.Map String (Matrix Int)
+fillMatrix emptyMatrices predName ts =
+  let indices = transpose . replaceWithPositions $ ts
+      matrix = Map.findWithDefault (error "Predicate not found") predName emptyMatrices
+      updatedMatrix = foldl' (\m idx -> set m idx 1) matrix indices
+  in Map.insert predName updatedMatrix emptyMatrices
 
 -- Function to build a domain map for variables 
 buildDomainMap :: DatalogProgram -> Map.Map String [Int]
@@ -25,13 +55,13 @@ countUniqueTerms ts = length . Set.toList . Set.fromList <$> transpose [ts]
 initializeMatrixForPredicate :: Map.Map String [Int] -> Atom -> Matrix Int
 initializeMatrixForPredicate domainMap (Atom predicateName _) =
   let dimensions = Map.findWithDefault [] predicateName domainMap
-   in createZeroMatrix dimensions
+   in createZeroMatrix dimensions                       
 
 translateRule :: Map.Map String [Int] -> Rule -> Matrix Int
 translateRule domainMap (Rule headAtom bodyAtoms) =
   let termsList = map terms bodyAtoms -- Extract terms from each bodyAtom
-      bodyMatrices = map (initializeMatrixForPredicate domainMap) bodyAtoms
-      matricesWithTerms = zip bodyMatrices termsList -- Pair each matrix with its terms
+      filledMatrices = translateAtomsToMatrices bodyAtoms
+      matricesWithTerms = zip filledMatrices termsList -- Pair each matrix with its terms
       multipliedMatrix =
         foldl1'
           (\acc (matrix, bodyTerms) ->
