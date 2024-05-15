@@ -10,7 +10,7 @@ data Term
 data Atom = Atom
   { predicate :: String
   , terms :: [Term]
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Ord)
 
 -- Define a type for a rule (a head atom and a list of body atoms)
 data Rule = Rule
