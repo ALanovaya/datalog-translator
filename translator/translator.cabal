@@ -27,7 +27,7 @@ executable translator
 
 library
   exposed-modules:
-      DatalogAST, Translator
+      DatalogAST, Translator, MatrixAST
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
