@@ -2,3 +2,4 @@ packages:
   matrix-lib/
   translator/
   interpreter/
+  matrix-interpreter/
