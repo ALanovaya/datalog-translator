@@ -112,8 +112,9 @@ adjustDimensions largerMatrixOp smallerMatrixOp =
       smallerDimensions = getDimensions smallerMatrixOp
       updatedSmallerDims =
         if length largerDimensions /= length smallerDimensions
-          then take (length largerDimensions)
-                 $ smallerDimensions ++ repeat (Prelude.head largerDimensions)
+          then smallerDimensions
+               ++ replicate (length largerDimensions - length smallerDimensions)
+                            (last smallerDimensions)
           else smallerDimensions
       extendedSmallerMatrix = Extend smallerMatrixOp updatedSmallerDims
    in (updatedSmallerDims, extendedSmallerMatrix)
@@ -122,7 +123,7 @@ adjustDimensions largerMatrixOp smallerMatrixOp =
 adjustTerms :: [Term] -> [Int] -> [Term]
 adjustTerms termsA updatedDimsA =
   let diff = length updatedDimsA - length termsA
-   in replicate diff (Constant "0") ++ termsA
+   in termsA ++ replicate diff (Constant "0")
 
 -- Function to multiply two matrices
 multiplyMatricesAdjusted ::

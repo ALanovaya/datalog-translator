@@ -25,16 +25,16 @@ takeChunks _ [] = []
 takeChunks n xs = take n xs : takeChunks n (drop n xs)
 
 extendMatrix :: [Int] -> Matrix.Matrix Int -> Matrix.Matrix Int
-extendMatrix headMatrixDimensions matrix =
+extendMatrix matrixDimensions matrix =
   let currentDimensions = shape matrix
-      dimensionDiff = length headMatrixDimensions - length currentDimensions
+      dimensionDiff = length matrixDimensions - length currentDimensions
    in case compare dimensionDiff 0 of
         GT -> increaseDimensions dimensionDiff matrix
         LT ->
           let sliceStarts = replicate (length currentDimensions) 0
               sliceEnds =
-                headMatrixDimensions
-                  ++ drop (length headMatrixDimensions) currentDimensions
+                matrixDimensions
+                  ++ drop (length matrixDimensions) currentDimensions
            in slice sliceStarts sliceEnds matrix
         EQ -> matrix
 
