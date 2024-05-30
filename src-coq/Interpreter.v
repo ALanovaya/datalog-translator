@@ -1,5 +1,3 @@
-Module Interpreter.
-
 Require Import Coq.Maps.Map.
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.String.
@@ -7,6 +5,8 @@ Require Import Coq.Setoids.SetoidArith.
 Require Import Coq.Setoids.Setoid.
 Require Import Coq.Sets.Set.
 Require Import DatalogAST.
+
+Module Interpreter.
 
 (* Define a type for a database *)
 Definition Database := Set Fact.

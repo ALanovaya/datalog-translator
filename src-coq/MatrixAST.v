@@ -1,6 +1,6 @@
 Require Import Coq.Lists.List.
 
-Section MatrixDefinition.
+Module MatrixAST.
 
 Variable A : Type.
 
@@ -17,4 +17,4 @@ Inductive MatrixOp : Type :=
   | Extend : MatrixOp -> list nat -> MatrixOp   (* Matrix extensions *)
   | Add : MatrixOp -> MatrixOp -> MatrixOp.     (* Matrix addition *)
 
-End MatrixDefinition
+End MatrixDefinition.

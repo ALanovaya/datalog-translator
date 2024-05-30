@@ -1,7 +1,7 @@
-Module DatalogAST.
-
 Require Import Coq.Strings.String.
 Require Import Coq.Lists.List.
+
+Module DatalogAST.
 
 (* Define a type for a variable or constant *)
 Inductive Term : Set :=
