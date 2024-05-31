@@ -127,5 +127,28 @@ Definition multiplyMatricesAdjusted (matrixA matrixB : MatrixOp nat) (termsA ter
   let (da, db) := findRepeatingTermIndices updatedTermsA updatedTermsB in
   Multiply da db matrixA' matrixB'.
 
+Variable A : Type.
+
+Fixpoint computeFixpoint (f : A -> A) (x : A) : A :=
+  match f x with
+  | y => if y = x then x else computeFixpoint f y
+  end.
+
+Fixpoint translateDatalogProgram (p : DatalogProgram) : list MatrixOp :=
+  let domainMap := buildDomainMap p in
+  let processClause (acc : Map string MatrixOp) (c : Clause) : Map string MatrixOp :=
+    match c with
+    | ClauseFact fact =>
+      let factMatrix := hd (translateAtomsToMatrices [fact]) in
+      let factPred := predicate fact in
+      Map.insert_with (fun _ _ acc' => Add acc' (Extend (MatrixConst factMatrix) (getDimensions acc'))) factPred factMatrix acc
+    | ClauseRule rule =>
+      let headPred := predicate (Rule_head rule) in
+      let matrix := translateRule p rule in
+      Map.insert_with (fun _ _ acc' => Add acc' (Extend (MatrixConst matrix) (getDimensions acc'))) headPred matrix acc
+    end
+  in
+  Map.elements (computeFixpoint (fun matrixMap => fold_left (processClause matrixMap) Map.empty (clauses p)) Map.empty).
+
 End Translator.
 

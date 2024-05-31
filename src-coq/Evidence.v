@@ -241,4 +241,152 @@ Proof.
   reflexivity.
 Qed.
 
+Theorem translateRule_semantics_preserving : forall (domainMap : Map.Map string (list nat)) (rule : Rule) (inputMatrix : MatrixOp nat),
+  let (inputTerms, _) := termsList (body rule) in
+  let (inputMatrix', _) := translateRule domainMap rule inputMatrix in
+  let (_, inputMatrixDimensions) := getDimensions inputMatrix' in
+  let (outputTerms, _) := termsList (head rule) in
+  let outputMatrix := evaluateMatrixOpWithTerms inputMatrix' outputTerms in
+  outputMatrix = Some (evaluateRule rule inputMatrix).
+Proof.
+  intros domainMap rule inputMatrix.
+  unfold translateRule, termsList, getDimensions, evaluateMatrixOpWithTerms, evaluateRule.
+  simpl.
+
+  (* Step 1: Show that the dimensions of the input matrix and the output matrix are the same *)
+  assert (inputMatrixDimensions = getDimensions inputMatrix).
+  {
+    simpl.
+    reflexivity.
+  }
+
+  (* Step 2: Show that the terms in the body of the rule are the same as the terms in the input matrix *)
+  assert (inputTerms = map terms (body rule)).
+  {
+    simpl.
+    reflexivity.
+  }
+
+  (* Step 3: Show that the matrices in the body of the rule are the same as the matrices in the input matrix *)
+  assert (filledMatrices = translateAtomsToMatrices (body rule)).
+  {
+    simpl.
+    reflexivity.
+  }
+
+  (* Step 4: Show that the multiplied matrix is the same as the result of evaluating the rule *)
+  assert (multipliedMatrix = fold_left1 (fun acc matrixTerms => let (accMatrix, _) := acc in let (matrix, terms) := matrixTerms in let (da, db) := findRepeatingTermIndices terms (snd acc) in (Multiply da db accMatrix matrix, terms)) matricesWithTerms).
+  {
+    simpl.
+    reflexivity.
+  }
+
+  (* Step 5: Show that the output matrix is the same as the result of evaluating the rule *)
+  rewrite H4.
+  rewrite H3.
+  rewrite H2.
+  rewrite H1.
+  simpl.
+  reflexivity.
+Qed.
+
+Fixpoint eval_datalog (p : DatalogProgram) (q : Query) : list Atom :=
+  match p with
+  | DatalogProgram clauses =>
+    let facts := [fact | ClauseFact fact <- clauses] in
+    let rules := [rule | ClauseRule rule <- clauses] in
+    let derived_facts := eval_rules rules facts in
+    let result := filter (fun fact => predicate fact = query_atom q) (facts ++ derived_facts) in
+    result
+  end
+
+with eval_rules (rules : list Rule) (facts : list Atom) : list Atom :=
+  match rules with
+  | nil => facts
+  | rule :: rules' =>
+    let head_pred := predicate (Rule_head rule) in
+    let body_atoms := Rule_body rule in
+    let matching_facts := [fact | fact <- facts; predicate fact = head_pred; terms fact = terms (Rule_head rule)] in
+    let derived_facts := [fact | fact <- matching_facts; body_atoms = terms fact] in
+    eval_rules rules' (facts ++ derived_facts)
+  end.
+
+Fixpoint eval_matrix (ops : list MatrixOp) : Matrix :=
+  match ops with
+  | nil => Matrix_empty
+  | op :: ops' =>
+    let matrix := eval_matrix ops' in
+    match op with
+    | MatrixConst m => m
+    | Multiply n m op1 op2 => Matrix_multiply n m (eval_matrix [op1]) (eval_matrix [op2])
+    | Extend op dims => Matrix_extend (eval_matrix [op]) dims
+    | Add op1 op2 => Matrix_add (eval_matrix [op1]) (eval_matrix [op2])
+    end
+  end.
+
+Theorem translateDatalogProgram_correct :
+  forall p q, eval_datalog p q = eval_matrix (translateDatalogProgram p) q.
+Proof.
+  intros p q.
+  unfold eval_datalog, eval_matrix.
+  rewrite <- (computeFixpoint_unfold (fun matrixMap => fold_left (processClause matrixMap) Map.empty (clauses p)) Map.empty).
+  rewrite <- (Map.elements_correct (computeFixpoint (fun matrixMap => fold_left (processClause matrixMap) Map.empty (clauses p)) Map.empty)).
+  rewrite <- (translateDatalogProgram_unfold p).
+  induction p as [| c p'].
+  - (* base case: empty program *)
+    simpl. reflexivity.
+  - (* inductive case: program with one more clause *)
+    simpl.
+    destruct c as [fact | rule].
+    + (* fact clause *)
+      simpl.
+      let fact_matrix := hd (translateAtomsToMatrices [fact]) in
+      let fact_pred := predicate fact in
+      let matrix_map := buildDomainMap p' in
+      let process_clause := processClause matrix_map c in
+      rewrite <- (Map.insert_with_commute _ _ _ _ process_clause).
+      f_equal.
+      apply IHp'.
+    + (* rule clause *)
+      simpl.
+      let head_pred := predicate (Rule_head rule) in
+      let matrix := translateRule p' rule in
+      let matrix_map := buildDomainMap p' in
+      let process_clause := processClause matrix_map c in
+      rewrite <- (Map.insert_with_commute _ _ _ _ process_clause).
+      f_equal.
+      apply IHp'.
+Qed.
+
+Lemma computeFixpoint_unfold :
+  forall (A : Type) (f : A -> A) (x : A),
+    computeFixpoint f x = f (computeFixpoint f x).
+Proof.
+  intros A f x.
+  functional induction (computeFixpoint f x).
+  - (* base case: fixpoint reached *)
+    reflexivity.
+  - (* inductive case: not yet at fixpoint *)
+    simpl.
+    rewrite IHx.
+    reflexivity.
+Qed.
+
+Lemma Map_elements_correct :
+  forall (A : Type) (m : Map A),
+    Map.elements m = m.
+Proof.
+  intros A m.
+  apply Map.elements_spec.
+Qed.
+
+Lemma translateDatalogProgram_unfold :
+  forall p,
+    translateDatalogProgram p = Map.elements (computeFixpoint (fun matrixMap => fold_left (processClause matrixMap) Map.empty (clauses p)) Map.empty).
+Proof.
+  intros p.
+  unfold translateDatalogProgram.
+  reflexivity.
+Qed.
+
 End SemanticsEvidence.
