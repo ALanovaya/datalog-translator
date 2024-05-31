@@ -1,14 +1,23 @@
 Require Import Translator.
-Require Import Coq.Maps.Map.
-Require Import Coq.Lists.List.
-Require Import Coq.Strings.String.
-Require Import Coq.Setoids.SetoidArith.
-Require Import Coq.Setoids.Setoid.
-Require Import Coq.Sets.Set.
 Require Import DatalogAST.
 Require Import MatrixAST.
 Require Import Interpreter.
 Require Import MatrixInterpreter.
+
+Require Import Coq.Maps.Map.
+Require Import Coq.Lists.List.
+Require Import Coq.Strings.String.
+Require Import Coq.Sets.Set.
+
+Require Import Coq.NArith.Nat.
+
+Require Import Coq.Init.Datatypes.
+Require Import Coq.Init.Peano.
+
+Require Import Coq.Logic.Eqdep_dec.
+Require Import Coq.Logic.EqNative.
+Require Import Coq.Logic.Equivalences.
+Require Import Coq.Logic.Seq.
 
 Module SemanticsEvidence.
 

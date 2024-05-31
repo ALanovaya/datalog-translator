@@ -1,5 +1,13 @@
+Require Import Coq.Arith.Arith.
 Require Import Coq.Lists.List.
+Require Import Coq.Init.Datatypes.
+Require Import Coq.Init.Peano.
+Require Import Coq.Init.NaturalNumber.
+Require Import Coq.Init.BinNumbers.
+Require Import Coq.Init.Generics.
+Require Import Coq.Init.Prelude.
 Require Import MatrixAST.
+Require Import Matrix.
 
 Module MatrixInterpreter.
 

@@ -1,9 +1,11 @@
 Require Import Coq.Maps.Map.
-Require Import Coq.Lists.List.
 Require Import Coq.Strings.String.
-Require Import Coq.Setoids.SetoidArith.
-Require Import Coq.Setoids.Setoid.
+Require Import Coq.Init.Datatypes.
+Require Import Coq.Init.Peano.
+Require Import Coq.Lists.List.
 Require Import Coq.Sets.Set.
+Require Import Coq.Bool.Bool.
+Require Import Coq.Arith.Arith.
 Require Import DatalogAST.
 
 Module Interpreter.

@@ -3,6 +3,8 @@ Require Import Coq.Lists.List.
 Require Import Coq.Strings.String.
 Require Import Coq.Setoids.SetoidArith.
 Require Import Coq.Setoids.Setoid.
+Require Import Coq.NArith.Nat.
+Require Import Coq.Init.Datatypes.
 Require Import Coq.Sets.Set.
 Require Import DatalogAST.
 Require Import MatrixAST.
@@ -52,6 +54,78 @@ Definition fillMatrix (emptyMatrices : Map.Map string MatrixOp) (predName : stri
   let matrix := Map.findWithDefault (error "Predicate not found") predName emptyMatrices in
   let updatedMatrix := fold_left (fun m idx => setMatrixValue m idx 1) matrix indices in
   Map.insert predName updatedMatrix emptyMatrices.
+
+Definition buildDomainMap (program : DatalogProgram) : Map.Map string (list nat) :=
+  fold_left (fun acc clause => updateDomainMap acc clause) Map.empty program.
+
+Definition updateDomainMap (acc : Map.Map string (list nat)) (clause : Clause) :=
+  match clause with
+  | ClauseFact atom =>
+    let termCounts := countUniqueTerms (terms atom) in
+    let newDomainMap := Map.insert_with (zip_with max) (predicate atom) termCounts acc in
+    Map.adjust (map (fun x => max 0 x)) (predicate atom) newDomainMap
+  | _ => acc
+  end.
+
+Definition countUniqueTerms (ts : list Term) : list nat :=
+  map (fun x => length (Set.toList (Set.fromList x))) (transpose (ts :: nil)).
+
+Definition initializeMatrixForPredicate (domainMap : Map.Map string (list nat)) (atom : Atom) : MatrixAST.Matrix nat :=
+  let dims := Map.find_with_default [] (predicate atom) domainMap in
+  let numberOfCells := fold_left (fun acc x => acc * x) 1 dims in
+  let cells := replicate numberOfCells 0 in
+  MatrixAST.Matrix dims cells.
+
+Definition translateRule (domainMap : Map.Map string (list nat)) (rule : Rule) : MatrixOp nat :=
+  let termsList := map terms (body rule) in
+  let filledMatrices := translateAtomsToMatrices (body rule) in
+  let matricesWithTerms := combine filledMatrices termsList in
+  let multipliedMatrix :=
+    fold_left1
+      (fun acc matrixTerms =>
+         let (accMatrix, _) := acc in
+         let (matrix, terms) := matrixTerms in
+         let (da, db) := findRepeatingTermIndices terms (snd acc) in
+         (Multiply da db accMatrix matrix, terms))
+      matricesWithTerms
+  in
+  let headMatrixDimensions := Map.find_with_default [] (predicate (head rule)) domainMap in
+  Extend (fst multipliedMatrix) headMatrixDimensions.
+
+Definition findRepeatingTermIndices (listA listB : list Term) : (nat, nat) :=
+  let duplicates := filter (fun x => In x listB) listA in
+  let indexA := nth 0 (elem_indices (nth 0 duplicates) listA) 0 in
+  let indexB := nth 0 (elem_indices (nth 0 duplicates) listB) 0 in
+  (indexA, indexB).
+
+Definition getDimensions (matrixOp : MatrixOp nat) : list nat :=
+  match matrixOp with
+  | MatrixConst matrix => dimensions matrix
+  | _ => error "Unsupported operation"
+  end.
+
+Definition adjustDimensions (largerMatrixOp smallerMatrixOp : MatrixOp nat) : (list nat, MatrixOp nat) :=
+  let largerDimensions := getDimensions largerMatrixOp in
+  let smallerDimensions := getDimensions smallerMatrixOp in
+  let updatedSmallerDims :=
+    if length largerDimensions <> length smallerDimensions
+      then smallerDimensions ++ replicate (length largerDimensions - length smallerDimensions) (last smallerDimensions)
+      else smallerDimensions
+  in
+  let extendedSmallerMatrix := Extend smallerMatrixOp updatedSmallerDims in
+  (updatedSmallerDims, extendedSmallerMatrix).
+
+Definition adjustTerms (termsA : list Term) (updatedDimsA : list nat) : list Term :=
+  let diff := length updatedDimsA - length termsA in
+  termsA ++ replicate diff (Constant "0").
+
+Definition multiplyMatricesAdjusted (matrixA matrixB : MatrixOp nat) (termsA termsB : list Term) : MatrixOp nat :=
+  let (updatedDimsA, matrixA') := adjustDimensions matrixB matrixA in
+  let (updatedDimsB, matrixB') := adjustDimensions matrixA matrixB in
+  let updatedTermsA := adjustTerms termsA updatedDimsA in
+  let updatedTermsB := adjustTerms termsB updatedDimsB in
+  let (da, db) := findRepeatingTermIndices updatedTermsA updatedTermsB in
+  Multiply da db matrixA' matrixB'.
 
 End Translator.
 

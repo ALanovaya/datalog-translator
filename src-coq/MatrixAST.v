@@ -1,4 +1,6 @@
 Require Import Coq.Lists.List.
+Require Import Coq.Init.Datatypes.
+Require Import Coq.Init.Peano.
 
 Module MatrixAST.
 

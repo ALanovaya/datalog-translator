@@ -1,5 +1,7 @@
 Require Import Coq.Strings.String.
 Require Import Coq.Lists.List.
+Require Import Coq.Init.Datatypes.
+Require Import Coq.Init.Peano.
 
 Module DatalogAST.
 
