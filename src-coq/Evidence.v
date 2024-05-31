@@ -79,4 +79,166 @@ Proof.
     + apply IHatoms'. assumption.
 Qed.
 
+Definition getDomainMapValue (domainMap : Map.Map string (list nat)) (predicate : string) : list nat :=
+  Map.find_with_default [] predicate domainMap.
+
+Definition evaluateAtomWithDomainMap (atom : Atom) (domainMap : Map.Map string (list nat)) : option (list nat) :=
+  let dims := getDomainMapValue domainMap (predicate atom) in
+  if dims = [] then None
+  else Some (MatrixAST.matrixData (MatrixAST.fromMatrixAST (atom.matrix) dims)).
+
+Lemma initializeMatrixForPredicate_correct : forall (domainMap : Map.Map string (list nat)) (atom : Atom),
+  let dims := getDomainMapValue domainMap (predicate atom) in
+  let numberOfCells := fold_left (fun acc x => acc * x) 1 dims in
+  let cells := replicate numberOfCells 0 in
+  MatrixAST.Matrix dims cells = initializeMatrixForPredicate domainMap atom.
+Proof.
+  intros domainMap atom.
+  unfold initializeMatrixForPredicate.
+  simpl.
+  reflexivity.
+Qed.
+
+Lemma buildDomainMap_correct : forall (program : DatalogProgram),
+  let domainMap := buildDomainMap program in
+  forall (atom : Atom), In atom program ->
+  let dims := getDomainMapValue domainMap (predicate atom) in
+  dims <> [].
+Proof.
+  intros program domainMap atom Hin.
+  induction program as [| clause program'].
+  - contradiction.
+  - simpl in Hin.
+    destruct Hin as [Heq | Hin'].
+    + subst clause.
+      unfold buildDomainMap in domainMap.
+      simpl in domainMap.
+      unfold updateDomainMap.
+      simpl.
+      destruct clause as [| atom'].
+      * contradiction.
+      * simpl.
+        unfold countUniqueTerms.
+        simpl.
+        unfold getDomainMapValue.
+        simpl.
+        reflexivity.
+    + apply IHprogram'.
+      assumption.
+Qed.
+
+Theorem initializeMatrixForPredicate_preserves_semantics : forall (program : DatalogProgram) (atom : Atom),
+  In atom program ->
+  let domainMap := buildDomainMap program in
+  let matrix := initializeMatrixForPredicate domainMap atom in
+  evaluateAtomWithDomainMap atom domainMap = Some (MatrixAST.matrixData matrix).
+Proof.
+  intros program atom Hin.
+  let domainMap := buildDomainMap program in
+  let matrix := initializeMatrixForPredicate domainMap atom in
+  apply initializeMatrixForPredicate_correct.
+  apply buildDomainMap_correct.
+  assumption.
+Qed.
+
+Definition getMatrixData (matrixOp : MatrixOp nat) : Matrix.t :=
+  MatrixAST.matrixData (MatrixAST.fromMatrixAST matrixOp (getDimensions matrixOp)).
+
+Definition evaluateMatrixOpWithTerms (matrixOp : MatrixOp nat) (terms : list Term) : option (list nat) :=
+  let matrixData := getMatrixData matrixOp in
+  let termValues := map (fun term => evalTerm term matrixData) terms in
+  if exists (fun x => x = 0) termValues then None
+  else Some (map (fun x => x * (List.nth termValues (List.nth (getDimensions matrixOp) 1))) (List.nth matrixData 0)).
+
+Theorem multiplyMatricesAdjusted_semantics_preserving : forall (matrixA matrixB : MatrixOp nat) (termsA : list Term),
+  let (updatedDimsA, matrixA') := adjustDimensions matrixB matrixA in
+  let (updatedDimsB, matrixB') := adjustDimensions matrixA matrixB in
+  let updatedTermsA := adjustTerms termsA updatedDimsA in
+  let updatedTermsB := adjustTerms termsA updatedDimsB in
+  let resultA := Multiply (replicate (length updatedTermsA) 0) (replicate (length updatedTermsB) 0) matrixA matrixB in
+  let resultB := Multiply (replicate (length termsA) 0) (replicate (length termsA) 0) matrixA' matrixB' in
+  evaluateMatrixOpWithTerms resultA termsA = Some (List.nth (getMatrixData resultB) 0) <->
+  evaluateMatrixOpWithTerms matrixA termsA = Some (List.nth (getMatrixData resultB) 0).
+Proof.
+  intros matrixA matrixB termsA Hcorrect Hback.
+  unfold evaluateMatrixOpWithTerms, getMatrixData, adjustDimensions, adjustTerms, Multiply.
+  simpl.
+  destruct (getDimensions matrixA) as [da db].
+  destruct (getDimensions matrixB) as [dc dd].
+  simpl.
+  destruct (getDimensions matrixA') as [da' db'].
+  destruct (getDimensions matrixB') as [dc' dd'].
+  simpl.
+  assert (da = da').
+  {
+    simpl.
+    unfold replicate.
+    simpl.
+    reflexivity.
+  }
+  assert (db = db').
+  {
+    simpl.
+    unfold replicate.
+    simpl.
+    reflexivity.
+  }
+  assert (dc = dc').
+  {
+    simpl.
+    unfold replicate.
+    simpl.
+    reflexivity.
+  }
+  assert (dd = dd').
+  {
+    simpl.
+    unfold replicate.
+    simpl.
+    reflexivity.
+  }
+  assert (da * db = da' * db').
+  {
+    simpl.
+    reflexivity.
+  }
+  assert (db * dc = db' * dc').
+  {
+    simpl.
+    reflexivity.
+  }
+  assert (da * db * dc = da' * db' * dc).
+  {
+    simpl.
+    reflexivity.
+  }
+  assert (List.length termsA = da * db).
+  {
+    simpl.
+    reflexivity.
+  }
+  assert (List.length termsA = List.length updatedTermsA).
+  {
+    simpl.
+    reflexivity.
+  }
+  assert (List.length termsA = List.length updatedTermsB).
+  {
+    simpl.
+    reflexivity.
+  }
+  assert (List.length termsA = List.length (List.nth (getMatrixData resultB) 0)).
+  {
+    simpl.
+    reflexivity.
+  }
+  assert (List.length termsA = List.length (List.nth (getMatrixData resultB) 1)).
+  {
+    simpl.
+    reflexivity.
+  }
+  rewrite Hback.
+  reflexivity.
+Qed.
+
 End SemanticsEvidence.
