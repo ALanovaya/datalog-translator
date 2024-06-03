@@ -19,4 +19,4 @@ Inductive MatrixOp : Type :=
   | Extend : MatrixOp -> list nat -> MatrixOp   (* Matrix extensions *)
   | Add : MatrixOp -> MatrixOp -> MatrixOp.     (* Matrix addition *)
 
-End MatrixDefinition.
+End MatrixAST.
